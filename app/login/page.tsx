@@ -9,15 +9,21 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const router = useRouter()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle login logic here
+    // TODO: Backend authentication logic will be implemented later
+    // For now, we'll simulate a successful login and redirect to game page
     console.log("Login attempt:", { email, password })
+    
+    // Simulate successful login and redirect to game page
+    router.push("/game")
   }
 
   return (
