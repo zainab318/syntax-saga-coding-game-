@@ -7,12 +7,16 @@ import * as THREE from "three"
 import { Water } from "three/examples/jsm/objects/Water.js"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import ProgrammingBar, { CommandBlock } from "@/components/ProgrammingBar"
+import AnimatedSeahorse, { SeahorsePosition } from "@/components/AnimatedSeahorse"
 
 // 🌊 Water Component (React wrapper around THREE.Water)
 function WaterPlane() {
-  const waterRef = useRef()
+  const waterRef = useRef<THREE.Group>(null)
 
   useEffect(() => {
+    if (!waterRef.current) return
+
     const waterGeometry = new THREE.PlaneGeometry(200, 200)
     const textureLoader = new THREE.TextureLoader()
 
@@ -39,29 +43,63 @@ function WaterPlane() {
   // Animate water surface
   useFrame((_, delta) => {
     if (waterRef.current && waterRef.current.children[0]) {
-      waterRef.current.children[0].material.uniforms["time"].value += delta
+      const water = waterRef.current.children[0] as any
+      if (water.material && water.material.uniforms) {
+        water.material.uniforms["time"].value += delta
+      }
     }
   })
 
   return <group ref={waterRef} />
 }
 
+// Shared grid settings
+const GRID_SIZE = 6
+const SPACING = 5
+const HALF = Math.floor(GRID_SIZE / 2)
+const MIN_COORD = (0 - HALF) * SPACING // -15
+const MAX_COORD = (GRID_SIZE - 1 - HALF) * SPACING // 10
+
+// 🪙 Coin Component (centered on middle tile) with collect animation
+function Coin({ collected = false, onHidden }: { collected?: boolean; onHidden?: () => void }) {
+  const { scene: coinScene } = useGLTF("/coin23d.glb")
+  const coinGroup = useRef<THREE.Group>(null)
+
+  // Recenter the coin horizontally and lift it so its bottom rests on y=0
+  const recentered = coinScene.clone(true)
+  const box = new THREE.Box3().setFromObject(recentered)
+  const center = new THREE.Vector3()
+  box.getCenter(center)
+  // Center X/Z
+  recentered.position.x -= center.x
+  recentered.position.z -= center.z
+  // Lift by min Y so the bottom of geometry sits at y=0
+  recentered.position.y -= box.min.y
+
+  // Pop-and-rise animation when collected
+  useFrame((_, delta) => {
+    if (!coinGroup.current) return
+    if (collected) {
+      coinGroup.current.position.y += 1.2 * delta
+      const s = Math.max(coinGroup.current.scale.x - 1.5 * delta, 0)
+      coinGroup.current.scale.setScalar(s)
+      if (s <= 0.01) {
+        onHidden?.()
+      }
+    }
+  })
+
+  return (
+    <group ref={coinGroup} position={[0, 3.6, 0]} scale={3}>
+      <primitive object={recentered} />
+    </group>
+  )
+}
+
 // 🌿 Main Grid of Blocks and Plants
-function BlockGrid({ gridSize = 6, spacing = 5 }) {
+function BlockGrid({ gridSize = GRID_SIZE, spacing = SPACING }) {
   const { scene: floorScene } = useGLTF("/Singleblock.glb")
   const { scene: plantScene } = useGLTF("/Plant23d.glb")
-  const { scene: coinScene } = useGLTF("/coin23d.glb")
-  const { scene: seahorse } = useGLTF("/Character3d.glb")
-  useEffect(() => {
-    if (seahorse) {
-      seahorse.traverse((child) => {
-        if (child.isMesh && child.material) {
-          child.material = child.material.clone(); 
-          child.material.color = new THREE.Color("#5B1E8E"); 
-        }
-      });
-    }
-  }, [seahorse]);
   
   const plantPositions = [
     { x: 1, z: 2 },
@@ -104,18 +142,6 @@ function BlockGrid({ gridSize = 6, spacing = 5 }) {
   return (
     <>
       {blocks}
-  
-      {/* 🪙 Coin in center */}
-      <primitive
-  object={coinScene.clone(true)}
-  position={[-2, 1, 2]}
-/>
-
-<primitive
-  object={seahorse.clone(true)}
-  position={[-9, 0.3, -5]}
-  scale={1.5}
-/>
     </>
   )
   
@@ -125,6 +151,16 @@ function BlockGrid({ gridSize = 6, spacing = 5 }) {
 export default function GamePage() {
   const [currentLevel, setCurrentLevel] = useState(1)
   const [score, setScore] = useState(0)
+  const [coinCollected, setCoinCollected] = useState(false)
+  const [coinVisible, setCoinVisible] = useState(true)
+  const [flashText, setFlashText] = useState<string | null>(null)
+  const [seahorsePosition, setSeahorsePosition] = useState<SeahorsePosition>({
+    x: -10, // snap to grid corner
+    z: -10, // snap to grid corner
+    rotation: 0
+  })
+  const [isExecuting, setIsExecuting] = useState(false)
+  const [currentCommandIndex, setCurrentCommandIndex] = useState(0)
 
   const handleNextLevel = () => {
     setCurrentLevel((prev) => prev + 1)
@@ -134,49 +170,113 @@ export default function GamePage() {
   const handleReset = () => {
     setCurrentLevel(1)
     setScore(0)
+    setSeahorsePosition({ x: -10, z: -10, rotation: 0 })
+    setCurrentCommandIndex(0)
+    setCoinCollected(false)
+    setCoinVisible(true)
+    setFlashText(null)
   }
 
+  // Execute program commands
+  const executeProgram = (commands: CommandBlock[]) => {
+    if (commands.length === 0) return
+    
+    setIsExecuting(true)
+    setCurrentCommandIndex(0)
+    executeNextCommand(commands, 0)
+  }
+
+  const executeNextCommand = (commands: CommandBlock[], index: number) => {
+    if (index >= commands.length) {
+      setIsExecuting(false)
+      return
+    }
+
+    const command = commands[index]
+    const newPosition = { ...seahorsePosition }
+
+    switch (command.type) {
+      case 'forward':
+        // Move one tile forward
+        newPosition.x += Math.sin(newPosition.rotation) * SPACING
+        newPosition.z += Math.cos(newPosition.rotation) * SPACING
+        break
+      case 'backward':
+        newPosition.x -= Math.sin(newPosition.rotation) * SPACING
+        newPosition.z -= Math.cos(newPosition.rotation) * SPACING
+        break
+      case 'turnLeft':
+        newPosition.rotation += Math.PI / 2 // 90 degrees
+        break
+      case 'turnRight':
+        newPosition.rotation -= Math.PI / 2 // -90 degrees
+        break
+      case 'turnAround':
+        newPosition.rotation += Math.PI
+        break
+      case 'wait':
+        // no position change
+        break
+    }
+
+    // Clamp rotation to [-PI, PI] for stability
+    if (newPosition.rotation > Math.PI || newPosition.rotation < -Math.PI) {
+      newPosition.rotation = Math.atan2(Math.sin(newPosition.rotation), Math.cos(newPosition.rotation))
+    }
+
+    // Clamp to grid bounds so the seahorse can't leave the platform
+    newPosition.x = Math.min(MAX_COORD, Math.max(MIN_COORD, Math.round(newPosition.x / SPACING) * SPACING))
+    newPosition.z = Math.min(MAX_COORD, Math.max(MIN_COORD, Math.round(newPosition.z / SPACING) * SPACING))
+
+    setSeahorsePosition(newPosition)
+    setCurrentCommandIndex(index + 1)
+
+    // Coin collection check after this step
+    maybeCollectCoin(newPosition)
+
+    // Wait for animation to complete before next command
+    setTimeout(() => {
+      executeNextCommand(commands, index + 1)
+    }, 1200) // slower step cadence
+  }
+
+  const maybeCollectCoin = (pos: SeahorsePosition) => {
+    if (coinCollected || !coinVisible) return
+    const threshold = SPACING * 0.9 // within ~one tile from center
+    if (Math.abs(pos.x) <= threshold && Math.abs(pos.z) <= threshold) {
+      setCoinCollected(true)
+      setScore((s) => s + 100)
+      setFlashText("Coin collected!")
+      setTimeout(() => setFlashText(null), 1000)
+    }
+  }
+
+  // Also check collection any time the seahorse position changes (extra safety)
+  useEffect(() => {
+    maybeCollectCoin(seahorsePosition)
+  }, [seahorsePosition])
+
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-4xl">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2">Syntax Saga</h1>
-          <p className="text-gray-400 text-lg">Coding Adventure Game</p>
+    <div className="min-h-screen bg-green-100 flex flex-col">
+      {/* Header with Score */}
+      <div className="bg-green-100 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <span className="text-black text-lg font-bold">9/60</span>
+            <div className="flex gap-1">
+              {[1, 2, 3].map((star) => (
+                <span key={star} className="text-yellow-500 text-lg">
+                  {star <= 2 ? '★' : '☆'}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
+      </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card className="bg-gray-900 border-gray-700">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-white text-sm">Current Level</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-400">{currentLevel}</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-900 border-gray-700">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-white text-sm">Score</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-400">{score}</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-900 border-gray-700">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-white text-sm">Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-400">Playing</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* 🌊 3D Scene */}
-        <div className="w-full h-[500px] bg-gray-950 border border-gray-700 rounded-lg overflow-hidden mb-6">
+      {/* 3D Game Scene */}
+      <div className="flex-1 bg-green-100">
+        <div className="w-full h-[400px] bg-green-100">
           <Canvas camera={{ position: [5, 5, 5], fov: 50 }}>
             <ambientLight intensity={0.6} />
             <directionalLight position={[5, 10, 5]} intensity={1.2} />
@@ -184,34 +284,37 @@ export default function GamePage() {
             <Suspense fallback={null}>
               <WaterPlane />
               <BlockGrid />
+              {coinVisible && (
+                <Coin collected={coinCollected} onHidden={() => setCoinVisible(false)} />
+              )}
+              <AnimatedSeahorse 
+                position={seahorsePosition}
+                isAnimating={isExecuting}
+                onAnimationComplete={() => {
+                  // Animation complete callback
+                }}
+              />
               <OrbitControls enableZoom={true} />
               <Environment preset="city" />
             </Suspense>
           </Canvas>
         </div>
-
-        {/* Controls */}
-        <div className="flex justify-center gap-4">
-          <Button
-            onClick={handleNextLevel}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
-          >
-            Knowledge Door
-            router.push( "/knowledgedoor") 
-          </Button>
-          <Button
-            onClick={handleReset}
-            variant="outline"
-            className="border-gray-600 text-gray-300 hover:bg-gray-800 px-6 py-2"
-          >
-            Reset Game
-          </Button>
-        </div>
-
-        <div className="text-center mt-8 text-gray-500 text-sm">
-          <p>Ready to start your coding adventure? Add your game logic here!</p>
-        </div>
       </div>
+
+      {/* Programming Bar at Bottom */}
+      <div className="bg-green-100 p-4">
+        <ProgrammingBar 
+          onExecuteProgram={executeProgram}
+          isExecuting={isExecuting}
+        />
+      </div>
+      {flashText && (
+        <div className="fixed inset-x-0 bottom-24 flex justify-center pointer-events-none">
+          <div className="bg-yellow-400 text-black font-semibold px-4 py-2 rounded-md shadow-lg">
+            {flashText}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
