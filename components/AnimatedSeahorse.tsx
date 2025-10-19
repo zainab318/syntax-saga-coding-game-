@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect } from 'react'
 import { useGLTF } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
@@ -23,85 +23,60 @@ export default function AnimatedSeahorse({
   onAnimationComplete 
 }: AnimatedSeahorseProps) {
   const seahorseRef = useRef<THREE.Group>(null)
-  const { scene: seahorseScene } = useGLTF("/Character3d.glb")
-  const [targetPosition, setTargetPosition] = useState(position)
-  const [targetRotation, setTargetRotation] = useState(position.rotation)
-  const [isMoving, setIsMoving] = useState(false)
+  const { scene: seahorseScene } = useGLTF("/Seahorse.glb")
+  const bobOffset = useRef(0)
 
-  // Apply purple color to seahorse
+  // Apply color to seahorse
   useEffect(() => {
     if (seahorseScene) {
       seahorseScene.traverse((child) => {
         const mesh = child as unknown as THREE.Mesh
         if ((mesh as any).isMesh && mesh.material) {
           const material = (mesh.material as THREE.Material).clone() as any
-          ;(material.color as THREE.Color) = new THREE.Color("#5B1E8E")
+          if (material.color) {
+            material.color = new THREE.Color("#FFD700") // Gold color
+          }
           mesh.material = material
         }
       })
     }
   }, [seahorseScene])
 
-  // Animation logic
+  // Animation logic with smooth interpolation and bobbing
   useFrame((_, delta) => {
-    if (seahorseRef.current && isAnimating) {
+    if (seahorseRef.current) {
       const currentPos = seahorseRef.current.position
       const currentRot = seahorseRef.current.rotation.y
       
       // Smooth movement to target position
-      const moveSpeed = 2.0
-      const rotSpeed = 3.0
+      const lerpSpeed = 0.1
       
-      // Move towards target position
-      const distance = Math.sqrt(
-        Math.pow(targetPosition.x - currentPos.x, 2) + 
-        Math.pow(targetPosition.z - currentPos.z, 2)
-      )
+      // Interpolate position
+      currentPos.x += (position.x - currentPos.x) * lerpSpeed
+      currentPos.z += (position.z - currentPos.z) * lerpSpeed
       
-      if (distance > 0.1) {
-        setIsMoving(true)
-        const direction = new THREE.Vector3(
-          targetPosition.x - currentPos.x,
-          0,
-          targetPosition.z - currentPos.z
-        ).normalize()
-        
-        currentPos.x += direction.x * moveSpeed * delta
-        currentPos.z += direction.z * moveSpeed * delta
-      } else {
-        // Reached target position
-        currentPos.x = targetPosition.x
-        currentPos.z = targetPosition.z
-        setIsMoving(false)
-      }
+      // Add bobbing animation (up and down motion)
+      bobOffset.current += delta * 2 // Speed of bobbing
+      const bobAmount = Math.sin(bobOffset.current) * 0.15 // Height of bobbing
+      currentPos.y = 3 + bobAmount
       
-      // Rotate towards target rotation
-      const rotationDiff = targetRotation - currentRot
-      if (Math.abs(rotationDiff) > 0.01) {
-        const rotationDirection = rotationDiff > 0 ? 1 : -1
-        seahorseRef.current.rotation.y += rotationDirection * rotSpeed * delta
-      } else {
-        seahorseRef.current.rotation.y = targetRotation
-      }
+      // Interpolate rotation
+      let targetRot = position.rotation
+      let rotDiff = targetRot - currentRot
       
-      // Check if animation is complete
-      if (!isMoving && Math.abs(targetRotation - currentRot) < 0.01) {
-        onAnimationComplete?.()
-      }
+      // Normalize rotation difference to [-PI, PI]
+      while (rotDiff > Math.PI) rotDiff -= 2 * Math.PI
+      while (rotDiff < -Math.PI) rotDiff += 2 * Math.PI
+      
+      seahorseRef.current.rotation.y += rotDiff * lerpSpeed
     }
   })
 
-  // Update target position when position prop changes
-  useEffect(() => {
-    setTargetPosition(position)
-    setTargetRotation(position.rotation)
-  }, [position])
-
   return (
-    <group ref={seahorseRef} position={[position.x, 0.3, position.z]}>
+    <group ref={seahorseRef} position={[position.x, 3, position.z]} rotation={[0, position.rotation, 0]}>
       <primitive
         object={seahorseScene.clone(true)}
-        scale={1.5}
+        scale={1.2}
       />
     </group>
   )
