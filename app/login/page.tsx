@@ -23,7 +23,7 @@ export default function LoginPage() {
     console.log("Login attempt:", { email, password })
     
     // Simulate successful login and redirect to game page
-    router.push("/game")
+    router.push("/game/level1")
   }
 
   return (
