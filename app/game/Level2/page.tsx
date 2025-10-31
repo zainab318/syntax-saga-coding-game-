@@ -7,6 +7,7 @@ import AnimatedSeahorse, { type SeahorsePosition } from "@/components/AnimatedSe
 import CodeDisplay from "@/components/CodeDisplay"
 import { generatePythonCode } from "@/lib/codeGenerator"
 
+
 // Grid/tile and model placement constants (edit these numericals)
 export const TILE_SIZE = 4.5
 export const FIRST_TILE_X = -0.5
@@ -226,6 +227,7 @@ export default function Level2() {
 
   return (
     <>
+
       <div className="flex w-screen h-screen overflow-hidden">
         {/* LEFT 70% — Model and Programming Bar */}
         <div className="w-[70%] h-full flex flex-col bg-sky-200 border-r border-gray-300">

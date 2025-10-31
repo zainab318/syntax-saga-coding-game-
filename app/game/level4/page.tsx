@@ -8,6 +8,7 @@ import AnimatedSeahorse, { type SeahorsePosition } from "@/components/AnimatedSe
 import CodeDisplay from "@/components/CodeDisplay"
 import { generatePythonCode } from "@/lib/codeGenerator"
 
+
 // Coin model (clone per instance)
 function Coin({ position = [0, 0, 0] as [number, number, number] }) {
   const { scene } = useGLTF("/coin23d.glb")
@@ -204,6 +205,7 @@ export default function Level4() {
 
   return (
     <div className="flex w-screen h-screen overflow-hidden">
+
       {/* Coins collected counter */}
       <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 bg-white/80 backdrop-blur rounded-full px-4 py-1 text-gray-800 font-semibold shadow">
         {coinCollected.filter(Boolean).length}/3

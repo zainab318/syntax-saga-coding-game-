@@ -8,6 +8,7 @@ interface LevelProgress {
   level1: boolean
   level2: boolean
   level3: boolean
+  level4: boolean
 }
 
 export default function LevelsPage() {
@@ -16,7 +17,8 @@ export default function LevelsPage() {
   const [progress, setProgress] = useState<LevelProgress>({
     level1: false,
     level2: false,
-    level3: false
+    level3: false,
+    level4: false,
   })
   const router = useRouter()
 
@@ -33,7 +35,7 @@ export default function LevelsPage() {
         setProgress(JSON.parse(savedProgress))
       } else {
         // Default: only level 1 is unlocked
-        const defaultProgress = { level1: true, level2: false, level3: false }
+        const defaultProgress: LevelProgress = { level1: true, level2: false, level3: false, level4: false }
         setProgress(defaultProgress)
         localStorage.setItem("syntax_saga_progress", JSON.stringify(defaultProgress))
       }
@@ -99,15 +101,15 @@ export default function LevelsPage() {
         </div>
 
         {/* Levels Grid */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-4 gap-8 max-w-7xl mx-auto">
           {/* Level 1 */}
-          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border-4 border-blue-300">
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border-4 border-blue-300 flex flex-col">
             <div className="bg-blue-500 h-2 relative">
               <div className="absolute -top-2 -right-2 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-bold">1</span>
               </div>
             </div>
-            <div className="p-6">
+            <div className="p-6 flex flex-col h-full">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-2xl font-bold text-gray-800">Level 1</h3>
                 <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
@@ -131,7 +133,7 @@ export default function LevelsPage() {
 
               <Link
                 href="/game/level1"
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg"
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg mt-auto"
               >
                 <span>▶</span>
                 Start Level
@@ -142,7 +144,7 @@ export default function LevelsPage() {
           {/* Level 2 */}
           <div className={`bg-white rounded-2xl shadow-2xl overflow-hidden border-4 ${
             progress.level1 ? 'border-green-300' : 'border-gray-300'
-          }`}>
+          } flex flex-col`}>
             <div className={`h-2 relative ${
               progress.level1 ? 'bg-green-500' : 'bg-gray-400'
             }`}>
@@ -152,7 +154,7 @@ export default function LevelsPage() {
                 <span className="text-white text-sm font-bold">2</span>
               </div>
             </div>
-            <div className="p-6">
+            <div className="p-6 flex flex-col h-full">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-2xl font-bold text-gray-800">Level 2</h3>
                 <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
@@ -186,7 +188,7 @@ export default function LevelsPage() {
               {progress.level1 ? (
                 <Link
                   href="/game/Level2"
-                  className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg"
+                  className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg mt-auto"
                 >
                   <span>▶</span>
                   Start Level
@@ -194,7 +196,7 @@ export default function LevelsPage() {
               ) : (
                 <button
                   disabled
-                  className="w-full bg-gray-300 text-gray-500 font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 cursor-not-allowed"
+                  className="w-full bg-gray-300 text-gray-500 font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 cursor-not-allowed mt-auto"
                 >
                   <span>🔒</span>
                   Complete Level 1 First
@@ -206,7 +208,7 @@ export default function LevelsPage() {
           {/* Level 3 */}
           <div className={`bg-white rounded-2xl shadow-2xl overflow-hidden border-4 ${
             progress.level2 ? 'border-purple-300' : 'border-gray-300'
-          }`}>
+          } flex flex-col`}>
             <div className={`h-2 relative ${
               progress.level2 ? 'bg-purple-500' : 'bg-gray-400'
             }`}>
@@ -216,7 +218,7 @@ export default function LevelsPage() {
                 <span className="text-white text-sm font-bold">3</span>
               </div>
             </div>
-            <div className="p-6">
+            <div className="p-6 flex flex-col h-full">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-2xl font-bold text-gray-800">Level 3</h3>
                 <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
@@ -227,10 +229,10 @@ export default function LevelsPage() {
                   {progress.level2 ? 'Expert' : 'Locked'}
                 </span>
               </div>
-              <h4 className="text-lg font-bold text-gray-800 mb-2">Coming Soon</h4>
+              <h4 className="text-lg font-bold text-gray-800 mb-2">If/Else Logic</h4>
               <p className="text-gray-600 mb-6">
                 {progress.level2 
-                  ? 'Advanced programming challenges await' 
+                  ? 'Collect the key, open the door, and master if/else conditionals' 
                   : 'Complete Level 2 to unlock this challenge'
                 }
               </p>
@@ -240,20 +242,91 @@ export default function LevelsPage() {
                   <span className="text-gray-700 font-semibold">Features</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">Complex Logic</span>
-                  <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">Loops</span>
+                  <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">If/Else</span>
                   <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">Conditionals</span>
                   <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">Advanced AI</span>
                 </div>
               </div>
 
-              <button
-                disabled
-                className="w-full bg-teal-400 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 cursor-not-allowed"
-              >
-                <span>▶</span>
-                Coming Soon
-              </button>
+              {progress.level2 ? (
+                <Link
+                  href="/game/level3"
+                  className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg mt-auto"
+                >
+                  <span>▶</span>
+                  Start Level
+                </Link>
+              ) : (
+                <button
+                  disabled
+                  className="w-full bg-gray-300 text-gray-500 font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 cursor-not-allowed mt-auto"
+                >
+                  <span>🔒</span>
+                  Complete Level 2 First
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Level 4 */}
+          <div className={`bg-white rounded-2xl shadow-2xl overflow-hidden border-4 ${
+            progress.level3 ? 'border-teal-300' : 'border-gray-300'
+          } flex flex-col`}>
+            <div className={`h-2 relative ${
+              progress.level3 ? 'bg-teal-500' : 'bg-gray-400'
+            }`}>
+              <div className={`absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center ${
+                progress.level3 ? 'bg-teal-600' : 'bg-gray-500'
+              }`}>
+                <span className="text-white text-sm font-bold">4</span>
+              </div>
+            </div>
+            <div className="p-6 flex flex-col h-full">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-2xl font-bold text-gray-800">Level 4</h3>
+                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                  progress.level3 
+                    ? 'bg-teal-100 text-teal-800' 
+                    : 'bg-gray-100 text-gray-500'
+                }`}>
+                  {progress.level3 ? 'Master' : 'Locked'}
+                </span>
+              </div>
+              <h4 className="text-lg font-bold text-gray-800 mb-2">Loops & Collections</h4>
+              <p className="text-gray-600 mb-6">
+                {progress.level3 
+                  ? 'Use loops to collect 3 coins and finish the course' 
+                  : 'Complete Level 3 to unlock this challenge'
+                }
+              </p>
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-gray-700 font-semibold">Features</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">Loops</span>
+                  <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">Coin Collection</span>
+                  <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">3D Environment</span>
+                </div>
+              </div>
+
+              {progress.level3 ? (
+                <Link
+                  href="/game/level4"
+                  className="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg mt-auto"
+                >
+                  <span>▶</span>
+                  Start Level
+                </Link>
+              ) : (
+                <button
+                  disabled
+                  className="w-full bg-gray-300 text-gray-500 font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 cursor-not-allowed mt-auto"
+                >
+                  <span>🔒</span>
+                  Complete Level 3 First
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -285,6 +358,14 @@ export default function LevelsPage() {
                 {progress.level3 ? '✓' : '3'}
               </div>
               <p className="text-blue-100">Level 3</p>
+            </div>
+            <div className="text-center">
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold mb-2 ${
+                progress.level4 ? 'bg-green-500 text-white' : 'bg-gray-400 text-white'
+              }`}>
+                {progress.level4 ? '✓' : '4'}
+              </div>
+              <p className="text-blue-100">Level 4</p>
             </div>
           </div>
         </div>

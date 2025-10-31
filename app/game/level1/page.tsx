@@ -8,6 +8,7 @@ import AnimatedSeahorse, { type SeahorsePosition } from "@/components/AnimatedSe
 import CodeDisplay from "@/components/CodeDisplay"
 import { generatePythonCode } from "@/lib/codeGenerator"
 
+
 // 🔒 Fixed Camera Controller - Optimized for closer view
 function CameraController() {
   const { camera } = useThree()
@@ -178,6 +179,7 @@ export default function Level1() {
 
   return (
 <>
+
 <div className="flex w-screen h-screen overflow-hidden">
   {/* LEFT 70% — Model and Programming Bar */}
   <div className="w-[70%] h-full flex flex-col bg-sky-200 border-r border-gray-300">

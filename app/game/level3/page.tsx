@@ -6,6 +6,7 @@ import { useGLTF } from "@react-three/drei"
 import ProgrammingBar, { type CommandBlock } from "@/components/ProgrammingBar"
 import AnimatedSeahorse, { type SeahorsePosition } from "@/components/AnimatedSeahorse"
 import CodeDisplay from "@/components/CodeDisplay"
+
 import { generatePythonCode } from "@/lib/codeGenerator"
 
 // Editable seahorse starting pose (numericals)
@@ -260,6 +261,7 @@ export default function Level3() {
 
   return (
     <div className="flex w-screen h-screen overflow-hidden">
+
       {/* LEFT 70% — Model and Programming Bar */}
       <div className="w-[70%] h-full flex flex-col bg-sky-200 border-r border-gray-300">
         {/* 3D View */}
