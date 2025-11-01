@@ -10,8 +10,8 @@ import { generatePythonCode } from "@/lib/codeGenerator"
 
 // Grid/tile and model placement constants (edit these numericals)
 export const TILE_SIZE = 4.5
-export const FIRST_TILE_X = -0.5
-export const ROW_Z = -2
+export const FIRST_TILE_X = 4
+export const ROW_Z = -9
 
 // Seahorse starting pose (Tile 1)
 export const SEAHORSE_START_X = FIRST_TILE_X
@@ -135,9 +135,13 @@ export default function Level2() {
       case "turnLeft":
         newPosition.rotation += Math.PI / 2
         break
-      case "turnRight":
-        newPosition.rotation -= Math.PI / 2
-        break
+        case "turnRight":
+          // 90° clockwise - only rotate, don't move
+          newPosition.rotation -= Math.PI / 2
+          // Keep position exactly the same
+          newPosition.x = currentPos.x
+          newPosition.z = currentPos.z
+          break
       case "turnAround":
         newPosition.rotation += Math.PI
         break
@@ -305,5 +309,5 @@ export default function Level2() {
 
 useGLTF.preload("/Sea.glb")
 useGLTF.preload("/Level2_base.glb")
-useGLTF.preload("/SeaHorse.glb")
+useGLTF.preload("/SeaHorse2.glb")
 useGLTF.preload("/coin23d.glb")

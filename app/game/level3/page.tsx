@@ -10,8 +10,8 @@ import CodeDisplay from "@/components/CodeDisplay"
 import { generatePythonCode } from "@/lib/codeGenerator"
 
 // Editable seahorse starting pose (numericals)
-export const SEAHORSE_START_X = 1
-export const SEAHORSE_START_Z = -1
+export const SEAHORSE_START_X = 4
+export const SEAHORSE_START_Z = -9
 export const SEAHORSE_START_ROTATION = 0
 
 // 🔒 Fixed Camera Controller
@@ -59,17 +59,20 @@ function Door({ isOpen }: { isOpen: boolean }) {
   const doorRef = useRef<any>()
   const [angle, setAngle] = useState(0)
 
-  // Position and scale
-  scene.position.set(15, 9, 17)
-  scene.scale.set(0.8,0.8,0.8)
-  scene.rotation.set(0, Math.PI / 2, 0) // front face toward camera
+  // Set initial door placement
+  useEffect(() => {
+    scene.position.set(15, 9, 17)
+    scene.scale.set(0.8, 0.8, 0.8)
+    scene.rotation.set(0, Math.PI / 2, 0) // initial closed rotation
+  }, [scene])
 
-  // Door opening animation
+  // Animate rotation when opened
   useFrame(() => {
     if (isOpen && angle < Math.PI / 2) {
       setAngle((prev) => Math.min(prev + 0.05, Math.PI / 2))
     }
     if (doorRef.current) {
+      // Door opens by rotating backward around Y-axis
       doorRef.current.rotation.y = Math.PI / 2 - angle
     }
   })
@@ -372,6 +375,6 @@ export default function Level3() {
 // ✅ Preload models for faster load
 useGLTF.preload("/Sea.glb")
 useGLTF.preload("/Level3_base.glb")
-useGLTF.preload("/SeaHorse.glb")
+useGLTF.preload("/SeaHorse2.glb")
 useGLTF.preload("/KeyModel.glb")
 useGLTF.preload("/Door model2.glb")

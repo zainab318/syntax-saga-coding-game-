@@ -1,0 +1,7 @@
+# Python dependencies for code_generation scripts
+# Currently, all scripts use only Python standard library modules:
+# - typing, enum, json, sys (all built-in)
+#
+# No external packages are required at this time.
+# If you add external dependencies in the future, list them here.
+

@@ -115,10 +115,13 @@ export default function Level4() {
         newPosition.rotation += Math.PI / 2
         break
 
-      case "turnRight":
-        // 90° clockwise
-        newPosition.rotation -= Math.PI / 2
-        break
+        case "turnRight":
+          // 90° clockwise - only rotate, don't move
+          newPosition.rotation -= Math.PI / 2
+          // Keep position exactly the same
+          newPosition.x = currentPos.x
+          newPosition.z = currentPos.z
+          break
 
       case "turnAround":
         newPosition.rotation += Math.PI
@@ -304,5 +307,5 @@ export default function Level4() {
 // Preload assets
 useGLTF.preload("/Sea.glb")
 useGLTF.preload("/Level4_base.glb")
-useGLTF.preload("/Seahorse.glb")
+useGLTF.preload("/SeaHorse2.glb")
 useGLTF.preload("/coin23d.glb")
